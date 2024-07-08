@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+
 // Позиция ячейки. Индексация с нуля.
 struct Position {
     int row = 0;
@@ -30,7 +31,9 @@ struct Size {
     int rows = 0;
     int cols = 0;
 
-    bool operator==(Size rhs) const;
+    bool operator==(Size rhs) const {
+        return cols == rhs.cols && rows == rhs.rows;
+    };
 };
 
 // Описывает ошибки, которые могут возникнуть при вычислении формулы.
@@ -42,13 +45,24 @@ public:
         Div0,  // в результате вычисления возникло деление на ноль
     };
 
-    FormulaError(Category category);
+    FormulaError(Category category): category_(category) {}
 
-    Category GetCategory() const;
+    [[nodiscard]] Category GetCategory() const { return category_; }
 
-    bool operator==(FormulaError rhs) const;
+    bool operator==(FormulaError rhs) const { return category_ == rhs.GetCategory(); }
 
-    std::string_view ToString() const;
+    [[nodiscard]] std::string_view ToString() const{
+        switch (category_) {
+            case Category::Div0:
+                return "#DIV/0!";
+            case Category::Ref: 
+                return "#REF!";
+            case Category::Value:
+                return "#VALUE!";
+            default:
+                return "";
+        }
+    }
 
 private:
     Category category_;
@@ -83,7 +97,7 @@ public:
     using Value = std::variant<std::string, double, FormulaError>;
 
     virtual ~CellInterface() = default;
-
+    // virtual void Set(std::string text) = 0;
     // Возвращает видимое значение ячейки.
     // В случае текстовой ячейки это её текст (без экранирующих символов). В
     // случае формулы - числовое значение формулы или сообщение об ошибке.

@@ -14,6 +14,7 @@
 // ячейка или ячейка с пустым текстом трактуется как число ноль.
 class FormulaInterface {
 public:
+
     using Value = std::variant<double, FormulaError>;
 
     virtual ~FormulaInterface() = default;
